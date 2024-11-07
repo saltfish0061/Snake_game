@@ -1,0 +1,47 @@
+{
+    // Menu Interface
+    Difficulty = 'easy', 'normal', 'hard';
+    Gamemode: {
+        easy {
+            Speed = 1.0s;
+            FruitFrequency = 1;
+            Obstacles = 0;
+        }
+        normal {
+            Speed = 0.8s;
+            FruitFrequency = 1;
+            Obstacles = 1;
+        }
+        hard {
+            Speed = 0.5s;
+            FruitFrequency = 2;
+            Obstacles = 2;
+        }
+    }
+
+    // ASCII Code Based Graphic Settings
+    GraphicSymbols: {
+        SnakeHead: '@';
+        SnakeBody: 'O';
+        SnakeTail: '%';
+        Fruit: '*';
+        Obstacle: 'X';
+        Fence: '#';
+    }
+
+    // Leaderboard
+    Leaderboard: {
+        maxRecords = 10;
+        recordFields = {score, difficulty, date, time};
+        storage = "leaderboard.txt"; // Optional, for persistence
+    }
+
+    // Game
+    Dimensions: 30 x 40;
+    InitialSnakeLength: 3;
+    InitialLocation: random();
+    ifCaptureFruit: { SnakeBody++ ; score += 10; }
+    ifCollide(Fence, Obstacle, SnakeBody): terminate() - display "Game Over";
+    GameStartPause: space; display "PAUSED" if paused;
+    ifGameOver: display score, leaderboard, options { Retry, Home };
+}
