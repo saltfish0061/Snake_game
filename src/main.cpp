@@ -1,5 +1,3 @@
-//main game interface
-
 #include <iostream>
 #include <vector>
 #include <conio.h>
@@ -13,27 +11,70 @@ using namespace std;
 #define width 40
 #define height 20
 
-int tailX, tailY;
-int score, speed, speedLv, speedCapped;
+int tailX, tailY, numObstacles;
+int score, delay, speedLv, delayCapped;
 
 void clearBuffer();
-void updateBuffer(Snake& snake, Food& food);
-void render(Snake &snake);
-void game(Snake &snake, Food &food);
+void updateBuffer(Snake& snake, Food& food, Obstacle& obstacle);
+void render(Snake &snake, Obstacle &obstacle);
+void game(Snake &snake, Food &food, Obstacle &obstacle);
 void homepage();
 int difficultyMenu();
-
+void gameOver(Snake &snake);
  
-vector<vector<char>> board(height, vector<char>(width, ' ')); //2D array
+vector<vector<char>> board(width, vector<char>(height, ' ')); //2D array
+
+int main(){
+
+    //hide console
+    CONSOLE_CURSOR_INFO cci;
+    cci.dwSize = sizeof(cci);
+    cci.bVisible = FALSE;
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cci);
+
+
+    while (true) {
+
+        //create objects
+        Snake snake;
+        Food food;
+        Obstacle obstacle;
+
+        //reset the score and delay after each game
+        score = 0, delay = 150, speedLv = 0;
+        //welcome!
+        int terminate = 0;
+        do{
+            homepage();
+            terminate = difficultyMenu();
+        }while(terminate == 4); //if user press 'q' return to homepage
+
+        //initialize random seed
+        srand(time(NULL)); 
+
+        //get the attributes of the snake, food and obstacles, and initialize the setup
+        snake.initializeSnake();
+        food.generateFood(snake);
+        obstacle.generateObstacle(snake, food, numObstacles);
+ 
+        //start game
+        game(snake, food, obstacle);
+
+        //game over animation
+        gameOver(snake);
+
+    }
+    
+}
 
 void clearBuffer() {
-    // Clear buffer with spaces or reset values
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    // Clear the buffer 
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
             if (y == 0 || y == height - 1 || x == 0 || x == width - 1)
-                board[y][x] = '#'; // Draw borders
+                board[x][y] = '#'; // Draw borders
             else
-                board[y][x] = ' '; // Clear inside
+                board[x][y] = ' '; // Clear inside
         }
     }
 
@@ -41,82 +82,82 @@ void clearBuffer() {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-void updateBuffer(Snake& snake, Food& food) {
+void updateBuffer(Snake& snake, Food& food, Obstacle& obstacle) {
     clearBuffer(); // Start with a fresh buffer
 
     // Draw food
-    board[food.location.y][food.location.x] = '*';
+    board[food.location.x][food.location.y] = '*';
 
     // Draw snake
     for (int i = 0; i < snake.size; i++) {
         if (i == 0)
-            board[snake.body[i].y][snake.body[i].x] = '@'; // Snake head
+            board[snake.body[i].x][snake.body[i].y] = '@'; // Snake head
         else
-            board[snake.body[i].y][snake.body[i].x] = 'o'; // Snake body
+            board[snake.body[i].x][snake.body[i].y] = 'o'; // Snake body
+    }
+
+    // Draw obstacles
+    for(int i = 0; i < numObstacles; i++){
+        board[obstacle.no[i].x][obstacle.no[i].y] = 'X';
     }
 }
 
-void render(Snake &snake) {
+void render(Snake &snake, Obstacle &obstacle) {
     ostringstream output;
 
     // Construct the game board in output stream
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            output << board[y][x];
+            output << board[x][y];
         }
         output << '\n';
     }
 
-    // Add score, snake size, and speed information
+    // Add score, snake size, and delay information
     output << "Score: " << score << "\n";
     output << "Snake Size: " << snake.size << "\n";
     output << "Speed Level: " << speedLv << "\n";
-
+    
+    // Display the game board
     cout << output.str();
+    
 }
 
-void game(Snake &snake, Food &food){
+void game(Snake &snake, Food &food, Obstacle &obstacle) {
 
     //game continue while snake is not colliding
-    while(!snake.snakeCollide()){
+    while(!snake.snakeCollide(obstacle)){
     
         //if snake captures the food
         if(snake.snakeCapture(food)){
             snake.snakeGrow();
             bool validPosition = false;
             do{
-                food.generateFood();
-                for(int i = 0; i < width; i++){
-                    for(int j = 0; j< height; j++){
-                        if(food.location.x != ' ' && food.location.y != ' '){
-                            validPosition = true;
-                        }else{
-                            validPosition = false;
-                        }
-                    }
+                //generate food and obstacles
+                validPosition = food.generateFood(snake); 
+                if(validPosition == true){
+                    validPosition = obstacle.generateObstacle(snake, food, numObstacles);
                 }
 
-            }while(validPosition == false);
+            }while(validPosition == false);//regenerate if the position is invalid
 
-            score += 10;
-            if(speed > speedCapped){
-                speed -= 10;
-                speedLv++;
+            score += 10; //increment score
+            if(delay > delayCapped){ //increment delay
+                delay -= 10;
+                speedLv++; //increment speed level
             } 
         }
 
         snake.snakeMove(); 
 
-        //setObject(snake, food);
-        updateBuffer(snake, food);
-        render(snake);
+        updateBuffer(snake, food, obstacle);   
+        render(snake, obstacle);
         
-        Sleep(speed);
+        //delay base on current delay level
+        Sleep(delay);
     }
 
 }
-
-bool activate;
 
 void homepage(){
 
@@ -132,15 +173,13 @@ void homepage(){
             cout << "#            Enter 'q' to Exit           #" << endl;
             cout << "#                                        #" << endl;
             cout << "##########################################" << endl;
-
-            activate = true;
-            cout << "Activate: "   << activate << endl;
             
-
+            //detect key press
             char key = _getch();
+
             if(key == 'q'){
                 cout << "Exiting Game..." << endl;
-                Sleep(1200);
+                Sleep(1500);
                 exit(0);
             }
             
@@ -152,6 +191,7 @@ int difficultyMenu() {
     char choice;
     int exitValue;
 
+    bool activate = true;
     while (activate) {
         // Display difficulty options
         cout << "##########################################" << endl;
@@ -164,8 +204,6 @@ int difficultyMenu() {
         cout << "#     Press 'q' to return to Main Menu   #" << endl;
         cout << "##########################################" << endl;
 
-        cout << "Activate: " << activate << endl;
-
         choice = _getch();
         
         system("cls");
@@ -173,34 +211,40 @@ int difficultyMenu() {
         // Handle difficulty selection
         switch (choice) {
             case '1':
-                speedCapped = 100;
+                //Difficulty settings
+                delayCapped = 100;
+                numObstacles = 1;
+                //Transition message
                 cout << "Easy difficulty selected." << endl;
                 cout << "Game Starting..." << endl;
                 Sleep(2000);
                 system("cls");
-                // Add game initialization code for Easy here
                 exitValue = 1;
                 break;
             case '2':
-                speedCapped = 70;
+                //Difficulty settings
+                delayCapped = 70;
+                numObstacles = 3;
+                //Transition message
                 cout << "Normal difficulty selected." << endl;
                 cout << "Game Starting..." << endl;
                 Sleep(2000);
                 system("cls");
-                // Add game initialization code for Normal here
                 exitValue = 2;
                 break;
             case '3':
-                speedCapped = 50;
+                //Difficulty settings
+                delayCapped = 50;
+                numObstacles = 5;
+                //Transition message
                 cout << "Hard difficulty selected." << endl;
                 cout << "Game Starting..." << endl;
                 Sleep(2000);
                 system("cls");
-                // Add game initialization code for Hard here
                 exitValue = 3;
                 break;
             case 'q':
-                // Return to main menu
+                // Return to home page
                 exitValue = 4;
                 break;
             default:
@@ -208,7 +252,7 @@ int difficultyMenu() {
                 exitValue = 0;
                 break;
         }
-        if(exitValue != 0){
+        if(exitValue != 0){ //1,2,3 for difficulty and 4 for quit
             activate = false;   
         }
         
@@ -220,7 +264,7 @@ int difficultyMenu() {
 void gameOver(Snake &snake){
 
     COORD deathBody, middle;
-    // Draw snake
+    //death animation
     for (int i = 0; i < snake.size; i++) {
         deathBody.X = snake.body[i].x;
         deathBody.Y = snake.body[i].y;
@@ -229,47 +273,14 @@ void gameOver(Snake &snake){
         
         Sleep(150);
     }
-    
-    middle.X = width/2 - 6; //center the text
+
+    //center the text
+    middle.X = 1;
     middle.Y = height/2;
 
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), middle );
-    cout << "Game   Over! " << endl;
-    cout << "\t       Score: " << score << "\n#   ";
+    cout << "           Game   Over!            " << endl;
+    cout << "#             Score: " << score << "\n#   ";
     system("pause");
     system("cls");
 }
-
-int main(){
-
-    while (true) {
-        //reset the score and speed after each game
-        score = 0, speed = 150, speedLv = 0;
-        //welcome!
-        int terminate = 0;
-        do{
-            homepage();
-            terminate = difficultyMenu();
-        }while(terminate == 4);
-
-        //initialize random seed
-        srand(time(NULL)); 
-
-        //create objects
-        Snake snake;
-        Food food;
-
-        //get the attributes of the snake
-        snake.initializeSnake();
-        food.generateFood();
-
-        //start game
-        game(snake, food);
-
-        //game over animation
-        gameOver(snake);
-        
-    }
-    
-}
-
