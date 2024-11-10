@@ -12,7 +12,7 @@ using namespace std;
 #define height 20
 
 int tailX, tailY, numObstacles;
-int score, delay, speedLv, delayCapped;
+int score, delay, speedLv, delayLimit;
 
 void clearBuffer();
 void updateBuffer(Snake& snake, Food& food, Obstacle& obstacle);
@@ -142,7 +142,7 @@ void game(Snake &snake, Food &food, Obstacle &obstacle) {
             }while(validPosition == false);//regenerate if the position is invalid
 
             score += 10; //increment score
-            if(delay > delayCapped){ //increment delay
+            if(delay > delayLimit){ //increment speed
                 delay -= 10;
                 speedLv++; //increment speed level
             } 
@@ -212,7 +212,7 @@ int difficultyMenu() {
         switch (choice) {
             case '1':
                 //Difficulty settings
-                delayCapped = 100;
+                delayLimit = 100;
                 numObstacles = 1;
                 //Transition message
                 cout << "Easy difficulty selected." << endl;
@@ -223,7 +223,7 @@ int difficultyMenu() {
                 break;
             case '2':
                 //Difficulty settings
-                delayCapped = 70;
+                delayLimit = 70;
                 numObstacles = 3;
                 //Transition message
                 cout << "Normal difficulty selected." << endl;
@@ -234,7 +234,7 @@ int difficultyMenu() {
                 break;
             case '3':
                 //Difficulty settings
-                delayCapped = 50;
+                delayLimit = 50;
                 numObstacles = 5;
                 //Transition message
                 cout << "Hard difficulty selected." << endl;

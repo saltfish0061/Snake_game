@@ -1,11 +1,10 @@
 Graphic representation of this game
-GraphicSymbols: {
     SnakeHead: '@';
     SnakeBody: 'O';
     Fruit: '*';
     Obstacle: 'X';
     Fence: '#';
-}
+
 
 Logic of the game:
 
@@ -14,7 +13,7 @@ Logic of the game:
     Define initial speed and score values.
 
 2. Initialize Game Board
-    Create a 2D board array with spaces and borders (# for the walls).
+    Create a 2D board array with spaces and borders (# for the fence).
     Initialize the game objects: Snake, Food, and Obstacles.
 
 3. Main Loop
