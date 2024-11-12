@@ -140,7 +140,6 @@ void game(Snake &snake, Food &food, Obstacle &obstacle) {
                 }
 
             }while(validPosition == false);//regenerate if the position is invalid
-
             score += 10; //increment score
             if(delay > delayLimit){ //increment speed
                 delay -= 10;
@@ -167,8 +166,8 @@ void homepage(){
             cout << "#                                        #" << endl;
             cout << "#                                        #" << endl;
             cout << "#       Use WASD to Move the Snake       #" << endl;
-            cout << "#     Capture * to Grow, Avoid Walls     #" << endl;
-            cout << "#    and X (gamemode normal and above)   #" << endl;
+            cout << "#     Capture * to Grow, Avoid # and X   #" << endl;
+            cout << "#                                        #" << endl;
             cout << "#         Press Any Key to Start         #" << endl;
             cout << "#            Enter 'q' to Exit           #" << endl;
             cout << "#                                        #" << endl;

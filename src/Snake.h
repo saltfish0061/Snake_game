@@ -6,19 +6,16 @@
 #define width 40
 #define height 20
 
-class Structure;
-class Snake;
-class Food;
-class Obstacle;
+struct Structure;
+struct Snake;
+struct Food;
+struct Obstacle;
 
-class Structure{
-    public: 
-    // x and y coordinates
+struct Structure{
     int x, y;
 };
 
-class Snake{
-    public:
+struct Snake{
     int size;
     //Max size of snake
     Structure body[width * height];
@@ -30,15 +27,13 @@ class Snake{
     void snakeMove();
 };
 
-class Food{
-    public:
+struct Food{
     Structure location;
 
     bool generateFood(Snake &snake);
 };
 
-class Obstacle{
-    public:
+struct Obstacle{
     int numObstacles;
     Structure location;
     //Store the obstacles coordinate if there are more than one
